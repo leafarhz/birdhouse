@@ -1,0 +1,11 @@
+# Photos
+*.jpg
+birdhouse/photos/
+
+# Python
+__pycache__/
+*.pyc
+settings.json
+
+# OS
+.DS_Store

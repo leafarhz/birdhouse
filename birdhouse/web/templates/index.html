@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Birdhouse Camera</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header>
+  <h1>Birdhouse Camera</h1>
+  <nav>
+    <a href="/" class="{{ 'active' if not gallery else '' }}">Dashboard</a>
+    <a href="/gallery" class="{{ 'active' if gallery else '' }}">Gallery</a>
+  </nav>
+</header>
+
+<main>
+
+  {# ── DASHBOARD ─────────────────────────────────────── #}
+  {% if not gallery %}
+  <section class="dashboard">
+
+    <div class="latest-photo">
+      <h2>Latest Capture</h2>
+      {% if latest %}
+        <img src="/photos/{{ latest }}" alt="Latest bird photo">
+        <p class="caption">{{ latest }}</p>
+      {% else %}
+        <div class="placeholder">No photos yet</div>
+      {% endif %}
+    </div>
+
+    <div class="stats-panel">
+      <h2>Pi Status</h2>
+      <table>
+        <tr><td>Last Update</td><td>{{ stats.get("timestamp", "N/A") }}</td></tr>
+        <tr><td>CPU Temp</td><td>{{ stats.get("cpu_temp", "N/A") }}</td></tr>
+        <tr><td>Uptime</td><td>{{ stats.get("uptime", "N/A") }}</td></tr>
+        <tr><td>Pi Disk Free</td><td>{{ stats.get("disk_free", "N/A") }} ({{ stats.get("disk_pct", "N/A") }} used)</td></tr>
+        <tr><td>WiFi</td><td>{{ stats.get("wifi_signal", "N/A") }}</td></tr>
+        <tr><td>Photos Stored</td><td>{{ stats.get("photo_count", 0) }}</td></tr>
+      </table>
+    </div>
+
+  </section>
+
+  {# ── GALLERY ───────────────────────────────────────── #}
+  {% elif gallery %}
+  <section class="gallery">
+    <h2>Photo Gallery ({{ photos|length }})</h2>
+    {% if photos %}
+    <div class="grid">
+      {% for photo in photos %}
+      <a href="/photos/{{ photo }}" target="_blank" class="thumb">
+        <img src="/photos/{{ photo }}" alt="{{ photo }}" loading="lazy">
+        <span>{{ photo }}</span>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+      <p>No photos captured yet.</p>
+    {% endif %}
+  </section>
+  {% endif %}
+
+</main>
+
+</body>
+</html>

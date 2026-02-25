@@ -1,0 +1,15 @@
+[Unit]
+Description=Birdhouse Camera — Web Portal
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=rafablazer
+WorkingDirectory=/home/rafablazer/birdhouse/web
+ExecStart=/usr/bin/python3 /home/rafablazer/birdhouse/web/app.py
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
