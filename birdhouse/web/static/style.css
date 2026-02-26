@@ -30,10 +30,7 @@ header {
   border-bottom: 2px solid var(--accent);
 }
 
-header h1 {
-  font-size: 1.4rem;
-  font-weight: 600;
-}
+header h1 { font-size: 1.4rem; font-weight: 600; }
 
 nav a {
   color: var(--muted);
@@ -86,7 +83,11 @@ h2 {
   max-height: 500px;
   border-radius: var(--radius);
   margin-bottom: 0.5rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
 }
+
+.latest-photo img:hover { opacity: 0.85; }
 
 .latest-photo .caption {
   color: var(--muted);
@@ -100,12 +101,27 @@ h2 {
   border-radius: var(--radius);
 }
 
-.stats-panel,
-.settings-panel {
+.stats-panel {
   background: var(--surface);
   border-radius: var(--radius);
   padding: 1.5rem;
 }
+
+.motion-highlights {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+}
+
+.view-all {
+  display: inline-block;
+  margin-top: 0.75rem;
+  color: var(--highlight);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.view-all:hover { text-decoration: underline; }
 
 table {
   width: 100%;
@@ -122,60 +138,39 @@ table td:first-child {
   width: 40%;
 }
 
-/* ── Settings form ───────────────────────────────── */
+/* ── Gallery ─────────────────────────────────────── */
 
-#settings-form label {
+.gallery-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.6rem;
-  font-size: 0.9rem;
-  color: var(--muted);
+  margin-bottom: 1rem;
 }
 
-#settings-form input[type="number"] {
-  width: 90px;
-  padding: 0.3rem 0.5rem;
-  border-radius: 4px;
-  border: 1px solid var(--accent);
-  background: var(--bg);
+.date-picker select {
+  background: var(--surface);
   color: var(--text);
-  text-align: right;
-}
-
-.res-group {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-}
-
-.res-group input { width: 72px; }
-
-#settings-form button {
-  margin-top: 0.5rem;
-  padding: 0.5rem 1.5rem;
-  background: var(--highlight);
-  color: #fff;
-  border: none;
+  border: 1px solid var(--accent);
   border-radius: 4px;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.9rem;
   cursor: pointer;
-  font-weight: 600;
 }
 
-#settings-form button:hover { opacity: 0.85; }
-
-#save-status {
-  margin-left: 0.75rem;
-  font-size: 0.85rem;
-  color: #6fca6f;
+.date-picker label {
+  color: var(--muted);
+  font-size: 0.9rem;
 }
 
-/* ── Gallery ─────────────────────────────────────── */
-
-.gallery .grid {
+.grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 1rem;
+}
+
+.grid.small {
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.75rem;
 }
 
 .thumb {
@@ -187,9 +182,12 @@ table td:first-child {
   font-size: 0.75rem;
   text-align: center;
   transition: transform 0.15s;
+  cursor: pointer;
 }
 
 .thumb:hover { transform: scale(1.03); }
+
+.motion-thumb { border: 2px solid var(--highlight); }
 
 .thumb img {
   width: 100%;
@@ -205,19 +203,101 @@ table td:first-child {
   white-space: nowrap;
 }
 
-/* ── Logs ────────────────────────────────────────── */
+/* ── Timelapse page ──────────────────────────────── */
 
-.logs pre {
+.timelapse-list {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.timelapse-card {
   background: var(--surface);
   border-radius: var(--radius);
-  padding: 1rem;
-  font-size: 0.8rem;
-  overflow-x: auto;
-  max-height: 70vh;
-  overflow-y: auto;
-  white-space: pre-wrap;
-  word-break: break-all;
+  overflow: hidden;
 }
+
+.timelapse-card video {
+  width: 100%;
+  max-height: 500px;
+  background: #000;
+}
+
+.timelapse-info {
+  padding: 0.75rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+/* ── Download button ─────────────────────────────── */
+
+.download-btn {
+  display: inline-block;
+  padding: 0.4rem 1rem;
+  background: var(--accent);
+  color: var(--text);
+  border: none;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.download-btn:hover { background: var(--highlight); }
+
+/* ── Lightbox ────────────────────────────────────── */
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+
+.lightbox.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.lightbox-content {
+  max-width: 95vw;
+  max-height: 95vh;
+  text-align: center;
+}
+
+.lightbox-content img {
+  max-width: 95vw;
+  max-height: 85vh;
+  border-radius: var(--radius);
+}
+
+.lightbox-controls {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.lightbox-controls button {
+  padding: 0.4rem 1.2rem;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.lightbox-controls button:hover { background: var(--accent); }
 
 /* ── Responsive ──────────────────────────────────── */
 
@@ -225,4 +305,5 @@ table td:first-child {
   header { flex-direction: column; gap: 0.5rem; }
   nav a { margin-left: 0; margin-right: 1rem; }
   .dashboard { grid-template-columns: 1fr; }
+  .gallery-header { flex-direction: column; gap: 0.5rem; align-items: flex-start; }
 }

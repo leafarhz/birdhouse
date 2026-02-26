@@ -11,22 +11,25 @@
 <header>
   <h1>Birdhouse Camera</h1>
   <nav>
-    <a href="/" class="{{ 'active' if not gallery else '' }}">Dashboard</a>
-    <a href="/gallery" class="{{ 'active' if gallery else '' }}">Gallery</a>
+    <a href="/" class="{{ 'active' if page == 'dashboard' else '' }}">Dashboard</a>
+    <a href="/gallery" class="{{ 'active' if page == 'gallery' else '' }}">Gallery</a>
+    <a href="/motion" class="{{ 'active' if page == 'motion' else '' }}">Motion</a>
+    <a href="/timelapses" class="{{ 'active' if page == 'timelapses' else '' }}">Timelapses</a>
   </nav>
 </header>
 
 <main>
 
   {# ── DASHBOARD ─────────────────────────────────────── #}
-  {% if not gallery %}
+  {% if page == 'dashboard' %}
   <section class="dashboard">
 
     <div class="latest-photo">
       <h2>Latest Capture</h2>
       {% if latest %}
-        <img src="/photos/{{ latest }}" alt="Latest bird photo">
-        <p class="caption">{{ latest }}</p>
+        <img id="latest-img" src="/photos/{{ latest }}" alt="Latest bird photo"
+             onclick="openLightbox(this.src)">
+        <p class="caption" id="latest-caption">{{ latest }}</p>
       {% else %}
         <div class="placeholder">No photos yet</div>
       {% endif %}
@@ -34,38 +37,181 @@
 
     <div class="stats-panel">
       <h2>Pi Status</h2>
-      <table>
-        <tr><td>Last Update</td><td>{{ stats.get("timestamp", "N/A") }}</td></tr>
-        <tr><td>CPU Temp</td><td>{{ stats.get("cpu_temp", "N/A") }}</td></tr>
-        <tr><td>Uptime</td><td>{{ stats.get("uptime", "N/A") }}</td></tr>
-        <tr><td>Pi Disk Free</td><td>{{ stats.get("disk_free", "N/A") }} ({{ stats.get("disk_pct", "N/A") }} used)</td></tr>
-        <tr><td>WiFi</td><td>{{ stats.get("wifi_signal", "N/A") }}</td></tr>
-        <tr><td>Photos Stored</td><td>{{ stats.get("photo_count", 0) }}</td></tr>
+      <table id="stats-table">
+        <tr><td>Last Update</td><td id="stat-timestamp">{{ stats.get("timestamp", "N/A") }}</td></tr>
+        <tr><td>CPU Temp</td><td id="stat-cpu">{{ stats.get("cpu_temp", "N/A") }}</td></tr>
+        <tr><td>Uptime</td><td id="stat-uptime">{{ stats.get("uptime", "N/A") }}</td></tr>
+        <tr><td>Pi Disk Free</td><td id="stat-disk">{{ stats.get("disk_free", "N/A") }} ({{ stats.get("disk_pct", "N/A") }} used)</td></tr>
+        <tr><td>WiFi</td><td id="stat-wifi">{{ stats.get("wifi_signal", "N/A") }}</td></tr>
+        <tr><td>Photos Stored</td><td id="stat-photos">{{ stats.get("photo_count", 0) }}</td></tr>
+        <tr><td>Motion Events</td><td id="stat-motion">{{ stats.get("motion_count", 0) }}</td></tr>
       </table>
     </div>
+
+    {% if recent_motion %}
+    <div class="motion-highlights">
+      <h2>Recent Motion Detections</h2>
+      <div class="grid small">
+        {% for photo in recent_motion %}
+        <a href="/photos/{{ photo }}" class="thumb" onclick="event.preventDefault(); openLightbox('/photos/{{ photo }}')">
+          <img src="/photos/{{ photo }}" alt="{{ photo }}" loading="lazy">
+          <span>{{ photo }}</span>
+        </a>
+        {% endfor %}
+      </div>
+      <a href="/motion" class="view-all">View all motion events</a>
+    </div>
+    {% endif %}
 
   </section>
 
   {# ── GALLERY ───────────────────────────────────────── #}
-  {% elif gallery %}
+  {% elif page == 'gallery' %}
   <section class="gallery">
-    <h2>Photo Gallery ({{ photos|length }})</h2>
+    <div class="gallery-header">
+      <h2>Photo Gallery ({{ photos|length }})</h2>
+      <form class="date-picker" method="get" action="/gallery">
+        <label>Date:
+          <select name="date" onchange="this.form.submit()">
+            <option value="">All dates</option>
+            {% for d in dates %}
+            <option value="{{ d }}" {{ 'selected' if d == selected_date else '' }}>{{ d }}</option>
+            {% endfor %}
+          </select>
+        </label>
+      </form>
+    </div>
     {% if photos %}
     <div class="grid">
       {% for photo in photos %}
-      <a href="/photos/{{ photo }}" target="_blank" class="thumb">
+      <a href="/photos/{{ photo }}" class="thumb" onclick="event.preventDefault(); openLightbox('/photos/{{ photo }}')">
         <img src="/photos/{{ photo }}" alt="{{ photo }}" loading="lazy">
         <span>{{ photo }}</span>
       </a>
       {% endfor %}
     </div>
     {% else %}
-      <p>No photos captured yet.</p>
+      <p>No photos for this date.</p>
+    {% endif %}
+  </section>
+
+  {# ── MOTION ────────────────────────────────────────── #}
+  {% elif page == 'motion' %}
+  <section class="gallery">
+    <div class="gallery-header">
+      <h2>Motion Detections ({{ photos|length }})</h2>
+      <form class="date-picker" method="get" action="/motion">
+        <label>Date:
+          <select name="date" onchange="this.form.submit()">
+            <option value="">All dates</option>
+            {% for d in dates %}
+            <option value="{{ d }}" {{ 'selected' if d == selected_date else '' }}>{{ d }}</option>
+            {% endfor %}
+          </select>
+        </label>
+      </form>
+    </div>
+    {% if photos %}
+    <div class="grid">
+      {% for photo in photos %}
+      <a href="/photos/{{ photo }}" class="thumb motion-thumb" onclick="event.preventDefault(); openLightbox('/photos/{{ photo }}')">
+        <img src="/photos/{{ photo }}" alt="{{ photo }}" loading="lazy">
+        <span>{{ photo }}</span>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+      <p>No motion detected yet. The birds are being shy.</p>
+    {% endif %}
+  </section>
+
+  {# ── TIMELAPSES ────────────────────────────────────── #}
+  {% elif page == 'timelapses' %}
+  <section class="timelapse-page">
+    <h2>Daily Timelapses ({{ videos|length }})</h2>
+    {% if videos %}
+    <div class="timelapse-list">
+      {% for video in videos %}
+      <div class="timelapse-card">
+        <video controls preload="metadata">
+          <source src="/timelapses/{{ video }}" type="video/mp4">
+        </video>
+        <div class="timelapse-info">
+          <span>{{ video }}</span>
+          <a href="/timelapses/{{ video }}" download class="download-btn">Download</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+      <p>No timelapses yet. The first one will be generated tonight at midnight.</p>
     {% endif %}
   </section>
   {% endif %}
 
 </main>
+
+{# ── LIGHTBOX ──────────────────────────────────────── #}
+<div id="lightbox" class="lightbox" onclick="closeLightbox()">
+  <div class="lightbox-content" onclick="event.stopPropagation()">
+    <img id="lightbox-img" src="" alt="Full size photo">
+    <div class="lightbox-controls">
+      <a id="lightbox-download" href="" download class="download-btn">Download</a>
+      <button onclick="closeLightbox()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── Lightbox ──────────────────────────────────────── */
+function openLightbox(src) {
+  document.getElementById("lightbox-img").src = src;
+  document.getElementById("lightbox-download").href = src;
+  document.getElementById("lightbox").classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+function closeLightbox() {
+  document.getElementById("lightbox").classList.remove("open");
+  document.body.style.overflow = "";
+}
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeLightbox();
+});
+
+/* ── Auto-refresh dashboard every 2 minutes ────────── */
+{% if page == 'dashboard' %}
+setInterval(async () => {
+  try {
+    // Refresh stats
+    const statsResp = await fetch("/api/stats");
+    const stats = await statsResp.json();
+    document.getElementById("stat-timestamp").textContent = stats.timestamp || "N/A";
+    document.getElementById("stat-cpu").textContent = stats.cpu_temp || "N/A";
+    document.getElementById("stat-uptime").textContent = stats.uptime || "N/A";
+    document.getElementById("stat-disk").textContent =
+      (stats.disk_free || "N/A") + " (" + (stats.disk_pct || "N/A") + " used)";
+    document.getElementById("stat-wifi").textContent = stats.wifi_signal || "N/A";
+    document.getElementById("stat-photos").textContent = stats.photo_count || 0;
+    document.getElementById("stat-motion").textContent = stats.motion_count || 0;
+
+    // Refresh latest photo
+    const latestResp = await fetch("/api/latest");
+    const latest = await latestResp.json();
+    if (latest.latest) {
+      const img = document.getElementById("latest-img");
+      const caption = document.getElementById("latest-caption");
+      if (img) {
+        img.src = "/photos/" + latest.latest + "?t=" + Date.now();
+        img.onclick = () => openLightbox(img.src);
+      }
+      if (caption) caption.textContent = latest.latest;
+    }
+  } catch (e) {
+    console.error("Auto-refresh failed:", e);
+  }
+}, 120000);
+{% endif %}
+</script>
 
 </body>
 </html>
